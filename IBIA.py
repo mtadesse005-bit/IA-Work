@@ -17,7 +17,7 @@ def create_table():
            id INTEGER PRIMARY KEY AUTOINCREMENT,
            username_input TEXT NOT NULL,
            email_input TEXT UNIQUE NOT NULL,
-           hashed_password TEXT NOT NULL,
+           hashed_password TEXT NOT NULL
            
        )
    ''')
@@ -29,7 +29,7 @@ def create_table():
            reps INTEGER,
            weight REAL,
            date TEXT,
-           FOREIGN KEY(user_id) REFERENCES user(id)
+           FOREIGN KEY(user_id) REFERENCES users(id)
                   
            
        )
@@ -37,7 +37,7 @@ def create_table():
    conn.commit()
    conn.close()
 
-   create_table()
-   print("Database saved succesfully")                              
+create_table()
+print("Database saved succesfully")                              
 
 
