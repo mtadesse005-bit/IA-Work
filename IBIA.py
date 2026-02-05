@@ -1,26 +1,43 @@
+import sqlite3
+import hashlib
+from datetime import date
+from kivy.lang import Builder
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.core.window import Window
 from kivymd.app import MDApp
-from kivymd.uix.button import MDRectangleFlatButton
-from kivymd.uix.screen import MDScreen
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton, MDRectangleFlatButton
+from kivymd.uix.list import OneLineListItem 
+def create_table(): 
+   conn = sqlite3.connect('ostofit.db')
+   cursor = conn.cursor()
+   print("HERE")
+   cursor.execute('''
+       CREATE TABLE IF NOT EXISTS users (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           username_input TEXT NOT NULL,
+           email_input TEXT UNIQUE NOT NULL,
+           hashed_password TEXT NOT NULL,
+           
+       )
+   ''')
+   cursor.execute('''
+       CREATE TABLE IF NOT EXISTS workouts (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           user_id INTEGER,
+           exercise_name TEXT,
+           reps INTEGER,
+           weight REAL,
+           date TEXT,
+           FOREIGN KEY(user_id) REFERENCES user(id)
+                  
+           
+       )
+   ''')
+   conn.commit()
+   conn.close()
 
-class SimpleApp(MDApp):
-    def build(self):
-        screen = MDScreen()
-        
-        # A simple button in the middle
-        btn = MDRectangleFlatButton(
-            text="Click Me!",
-            pos_hint={'center_x': 0.5, 'center_y': 0.5},
-            on_release=self.change_text
-        )
-        
-        screen.add_widget(btn)
-        return screen
-
-    def change_text(self, button):
-        button.text = "It Worked!"
-        button.md_bg_color = (0, 1, 0, 1) # Changes to Green
-
-SimpleApp().run()
-
+   create_table()
+   print("Database saved succesfully")                              
 
 
