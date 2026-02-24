@@ -41,11 +41,48 @@ create_table()
 print("Database saved succesfully")   
 
 
-
+# the GUI was mainly written by Gemini but I did have to go back and fix some ID issues.
 KV = '''
 ScreenManager:
+    WorkoutScreen:
     LoginScreen:
     RegisterScreen:
+
+<WorkoutScreen>:
+    name: 'workout'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "20dp"
+        spacing: "10dp"
+        
+        MDLabel:
+            text: "Log Your Workout"
+            halign: "center"
+            font_style: "H4"
+
+        MDTextField:
+            id: exercise_name
+            hint_text: "Exercise (e.g., Bench Press)"
+        
+        MDTextField:
+            id: reps
+            hint_text: "Reps"
+            input_filter: "int"  # Only allows numbers
+        
+        MDTextField:
+            id: weight
+            hint_text: "Weight (kg)"
+            input_filter: "float" # Allows decimals
+        
+        MDRaisedButton:
+            text: "Save Set"
+            pos_hint: {"center_x": .5}
+            on_release: root.add_workout()
+            
+        MDFlatButton:
+            text: "Logout"
+            pos_hint: {"center_x": .5}
+            on_release: root.manager.current = 'login'
 
 <LoginScreen>:
     name: 'login'
@@ -67,10 +104,11 @@ ScreenManager:
         MDRaisedButton:
             text: "Login"
             pos_hint: {"center_x": .5}
+            on_release: root.login_user()  # Triggers the DB check
         MDFlatButton:
             text: "Don't have an account? Register"
             pos_hint: {"center_x": .5}
-            on_release: root.login_user()
+            on_release: root.manager.current = 'register' # JUST switches screens
 
 <RegisterScreen>:
     name: 'register'
@@ -99,17 +137,12 @@ ScreenManager:
         MDRaisedButton:
             text: "Register"
             pos_hint: {"center_x": .5}
-            on_release: root.register_user() # Matches method name below
+            on_release: root.register_user() # Triggers the Save logic
         MDFlatButton:
             text: "Back to Login"
             pos_hint: {"center_x": .5}
-            on_release: root.manager.current = 'login'
+            on_release: root.manager.current = 'login' # JUST switches screens
 '''
-
-
-
-
-
 
 
 
@@ -135,10 +168,18 @@ def save_user(username_input, email_input, hashed_password):
     return new_id
 
 
+def save_workout(user_id, reps, exercise, weight):
+   conn = sqlite3.connect('ostofit.db')
+   cursor = conn.cursor()
+   cursor.execute('''INSERT INTO workouts'''
+      
+   )
+
+
 class LoginScreen(Screen):
    def login_user(self):
-    email = self.ids.email_login.text
-    password = self.ids.password_login.text
+    email = self.ids.login_email.text
+    password = self.ids.login_password.text
     if password == "" or email == "":
        print("Fill out all fields")
        return
