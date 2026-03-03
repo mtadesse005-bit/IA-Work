@@ -8,84 +8,42 @@ from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton, MDRectangleFlatButton
 from kivymd.uix.list import OneLineListItem
-# Both of the database SQL queries where made by the assistiance of Gemini regarding the debugging and using examples given to me by Gemini and previous project. 
+
 def create_table(): 
-   conn = sqlite3.connect('ostofit.db')
-   cursor = conn.cursor()
-   print("HERE")
-   cursor.execute('''
-       CREATE TABLE IF NOT EXISTS users (
-           id INTEGER PRIMARY KEY AUTOINCREMENT,
-           username_input TEXT NOT NULL,
-           email_input TEXT UNIQUE NOT NULL,
-           hashed_password TEXT NOT NULL
-           
-       )
-   ''')
-   cursor.execute('''
-       CREATE TABLE IF NOT EXISTS workouts (
-           id INTEGER PRIMARY KEY AUTOINCREMENT,
-           user_id INTEGER,
-           exercise_name TEXT,
-           reps INTEGER,
-           weight REAL,
-           date TEXT,
-           FOREIGN KEY(user_id) REFERENCES users(id)
-                  
-           
-       )
-   ''')
-   conn.commit()
-   conn.close()
+    conn = sqlite3.connect('ostofit.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username_input TEXT NOT NULL,
+            email_input TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workouts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            exercise_name TEXT,
+            reps INTEGER,
+            weight REAL,
+            date TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
 create_table()
-print("Database saved succesfully")   
 
-# Gemini built most of the ui framework as I had no Kivy experience but I did have to change the IDs so they matched with the python code.
 
+# I had Gemini build the user GUI as Kivy was too complicated for me to do but I did have to  fix some ID issues
 KV = '''
 ScreenManager:
-    WorkoutScreen:
     LoginScreen:
     RegisterScreen:
     WorkoutScreen:
     HistoryScreen:
-
-<WorkoutScreen>:
-    name: 'workout'
-    MDBoxLayout:
-        orientation: 'vertical'
-        padding: "20dp"
-        spacing: "10dp"
-        
-        MDLabel:
-            text: "Log Your Workout"
-            halign: "center"
-            font_style: "H4"
-
-        MDTextField:
-            id: exercise_name
-            hint_text: "Exercise (e.g., Bench Press)"
-        
-        MDTextField:
-            id: reps
-            hint_text: "Reps"
-            input_filter: "int"  # Only allows numbers
-        
-        MDTextField:
-            id: weight
-            hint_text: "Weight (kg)"
-            input_filter: "float" # Allows decimals
-        
-        MDRaisedButton:
-            text: "Save Set"
-            pos_hint: {"center_x": .5}
-            on_release: root.add_workout()
-            
-        MDFlatButton:
-            text: "Logout"
-            pos_hint: {"center_x": .5}
-            on_release: root.manager.current = 'login'
 
 <LoginScreen>:
     name: 'login'
@@ -112,6 +70,7 @@ ScreenManager:
             text: "Don't have an account? Register"
             pos_hint: {"center_x": .5}
             on_release: root.manager.current = 'register'
+
 <RegisterScreen>:
     name: 'register'
     MDBoxLayout:
@@ -139,11 +98,12 @@ ScreenManager:
         MDRaisedButton:
             text: "Register"
             pos_hint: {"center_x": .5}
-            on_release: root.register_user() # Triggers the Save logic
+            on_release: root.register_user()
         MDFlatButton:
             text: "Back to Login"
             pos_hint: {"center_x": .5}
             on_release: root.manager.current = 'login'
+
 <WorkoutScreen>:
     name: 'workout'
     MDBoxLayout:
@@ -186,10 +146,16 @@ ScreenManager:
             pos_hint: {"center_x": .5}
             on_release: root.manager.current = 'history'
 
+        MDFlatButton:
+            text: "Logout"
+            pos_hint: {"center_x": .5}
+            on_release: root.manager.current = 'login'
+
         Widget:
+
 <HistoryScreen>:
     name: 'history'
-    on_enter: root.load_history() # This triggers the database pull every time you open the screen
+    on_enter: root.load_history()
     MDBoxLayout:
         orientation: 'vertical'
         MDTopAppBar:
@@ -199,89 +165,67 @@ ScreenManager:
         ScrollView:
             MDList:
                 id: history_list
-
 '''
 
+# hashed password the following login function I used code from a previous coding project
 
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
-
-
-
-
-# mainly used from previous coding project but used Gemini debugging.
-def hash_password(hashed_password):
-   # Create a new sha256 hash object
-   sha_signature = hashlib.sha256(hashed_password.encode()).hexdigest()
-   return sha_signature
-
-
-
-
-
-def save_user(username_input, email_input, hashed_password):
+# For these functions below I used Gemini to convert my input code into Kivy. Also I asked Gemini to give me examples and explain meanings such as "class", "ScreenManager, and "self".
+def save_user(username, email, hashed_password):
     conn = sqlite3.connect('ostofit.db')
     cursor = conn.cursor()
-    cursor.execute('''
-            INSERT INTO users (username_input, email_input, hashed_password)
-            VALUES (?, ?, ?)
-            ''', (username_input, email_input, hashed_password))
+    cursor.execute('INSERT INTO users (username_input, email_input, hashed_password) VALUES (?, ?, ?)', 
+                   (username, email, hashed_password))
     new_id = cursor.lastrowid
     conn.commit()
     conn.close()
     return new_id
 
-
 def save_workout(user_id, exercise, reps, weight):
     conn = sqlite3.connect('ostofit.db')
     cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO workouts (user_id, exercise_name, reps, weight, date)
-        VALUES (?, ?, ?, ?, date('now'))
-    ''', (user_id, exercise, reps, weight))
+    cursor.execute('INSERT INTO workouts (user_id, exercise_name, reps, weight, date) VALUES (?, ?, ?, ?, date("now"))', 
+                   (user_id, exercise, reps, weight))
     conn.commit()
     conn.close()
 
-
-# I used Gemini to help debug my screen navigation that first made the app crash and later on made it so it wouldnt switch beyond screens and make some of the buttons actually work(applies to everything below this).
 class LoginScreen(Screen):
-   def login_user(self):
-    email = self.ids.login_email.text
-    password = self.ids.login_password.text
-    if password == "" or email == "":
-       print("Fill out all fields")
-       return
-    
-    hashed_attempt = hash_password(password)
+    def login_user(self):
+        email = self.ids.email_login.text
+        password = self.ids.password_login.text
+        if password == "" or email == "":
+            print("Fill out all fields")
+            return
+        
+        hashed_attempt = hash_password(password)
+        conn = sqlite3.connect('ostofit.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE email_input = ? AND hashed_password = ?", (email, hashed_attempt))
+        user = cursor.fetchone()
+        conn.close()
 
-    conn = sqlite3.connect('ostofit.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM users WHERE email_input = ? AND hashed_password = ?", (email, hashed_attempt))
-    user = cursor.fetchone()
-    conn.close()
-
-    if user:
-        MDApp.get_running_app().current_user_id = user[0]
-        print(f"Login Successful User ID: {user[0]}")
-        self.manager.current = 'workout'
-       
-
-
+        if user:
+            MDApp.get_running_app().current_user_id = user[0]
+            print(f"Login Successful User ID: {user[0]}")
+            self.manager.current = 'workout'
+        else:
+            print("Invalid credentials")
 
 class RegisterScreen(Screen):
-   def register_user(self):
-      username_input = self.ids.user_field.text
-      password_input = self.ids.password_field.text
-      confirm_password = self.ids.confirm_field.text
-      email_input = self.ids.email_field.text
-      if password_input == confirm_password and password_input != "":   
-          hashed_password = hash_password(confirm_password)
-          user_id = save_user(username_input, email_input, hashed_password)
-          MDApp.get_running_app().current_user_id = user_id
-          print(f"Account created successfully, {user_id}")
-          self.manager.current = 'login' 
-      else:
-          print("Passwords do not match")
-
+    def register_user(self):
+        username = self.ids.user_field.text
+        password = self.ids.password_field.text
+        confirm = self.ids.confirm_field.text
+        email = self.ids.email_field.text
+        if password == confirm and password != "":   
+            hashed = hash_password(confirm)
+            user_id = save_user(username, email, hashed)
+            MDApp.get_running_app().current_user_id = user_id
+            self.manager.current = 'login' 
+        else:
+            print("Passwords do not match or field is empty")
 
 class WorkoutScreen(Screen):
     def add_workout(self):
@@ -298,7 +242,6 @@ class WorkoutScreen(Screen):
         self.ids.weight_field.text = ""
         print("Workout Saved!")
 
-
 class HistoryScreen(Screen):
     def go_back(self):
         self.manager.current = 'workout'
@@ -308,26 +251,18 @@ class HistoryScreen(Screen):
         user_id = MDApp.get_running_app().current_user_id
         conn = sqlite3.connect('ostofit.db')
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT exercise_name, reps, weight, date 
-            FROM workouts 
-            WHERE user_id = ? 
-            ORDER BY id DESC
-        """, (user_id,))
+        cursor.execute("SELECT exercise_name, reps, weight, date FROM workouts WHERE user_id = ? ORDER BY id DESC", (user_id,))
         rows = cursor.fetchall()
         conn.close()
         for row in rows:
             display_text = f"{row[0]}: {row[1]} reps @ {row[2]}kg ({row[3]})"
-            self.ids.history_list.add_widget(
-                OneLineListItem(text=display_text)
-            )
-
+            self.ids.history_list.add_widget(OneLineListItem(text=display_text))
 
 class OstofitApp(MDApp):
-   current_user_id = None
+    current_user_id = None
+    def build(self):
+        return Builder.load_string(KV)
 
-   def build(self):
-      return Builder.load_string(KV)
 if __name__ == '__main__':
-   OstofitApp().run()
+    OstofitApp().run()
   
