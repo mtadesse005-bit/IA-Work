@@ -45,10 +45,47 @@ print("Database saved succesfully")
 
 KV = '''
 ScreenManager:
+    WorkoutScreen:
     LoginScreen:
     RegisterScreen:
     WorkoutScreen:
     HistoryScreen:
+
+<WorkoutScreen>:
+    name: 'workout'
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "20dp"
+        spacing: "10dp"
+        
+        MDLabel:
+            text: "Log Your Workout"
+            halign: "center"
+            font_style: "H4"
+
+        MDTextField:
+            id: exercise_name
+            hint_text: "Exercise (e.g., Bench Press)"
+        
+        MDTextField:
+            id: reps
+            hint_text: "Reps"
+            input_filter: "int"  # Only allows numbers
+        
+        MDTextField:
+            id: weight
+            hint_text: "Weight (kg)"
+            input_filter: "float" # Allows decimals
+        
+        MDRaisedButton:
+            text: "Save Set"
+            pos_hint: {"center_x": .5}
+            on_release: root.add_workout()
+            
+        MDFlatButton:
+            text: "Logout"
+            pos_hint: {"center_x": .5}
+            on_release: root.manager.current = 'login'
 
 <LoginScreen>:
     name: 'login'
@@ -102,7 +139,7 @@ ScreenManager:
         MDRaisedButton:
             text: "Register"
             pos_hint: {"center_x": .5}
-            on_release: root.register_user() # Matches method name below
+            on_release: root.register_user() # Triggers the Save logic
         MDFlatButton:
             text: "Back to Login"
             pos_hint: {"center_x": .5}
@@ -208,8 +245,8 @@ def save_workout(user_id, exercise, reps, weight):
 # I used Gemini to help debug my screen navigation that first made the app crash and later on made it so it wouldnt switch beyond screens and make some of the buttons actually work(applies to everything below this).
 class LoginScreen(Screen):
    def login_user(self):
-    email = self.ids.email_login.text
-    password = self.ids.password_login.text
+    email = self.ids.login_email.text
+    password = self.ids.login_password.text
     if password == "" or email == "":
        print("Fill out all fields")
        return
