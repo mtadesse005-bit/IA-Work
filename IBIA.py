@@ -265,4 +265,3 @@ class OstofitApp(MDApp):
 
 if __name__ == '__main__':
     OstofitApp().run()
-  
